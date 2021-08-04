@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>RAC中的信号筛选操作 | Bob的技术博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="过滤操作也属于一种变换，根据过滤条件，过滤出符合条件的值。变换出来的新的信号是原信号的一个子集。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RAC中的信号筛选操作">
+<meta property="og:url" content="https://tianxianbob.github.io/2018/09/24/[iOS]RAC%E4%B8%AD%E7%9A%84%E4%BF%A1%E5%8F%B7%E7%AD%9B%E9%80%89%E6%93%8D%E4%BD%9C/index.html">
+<meta property="og:site_name" content="Bob的技术博客">
+<meta property="og:description" content="过滤操作也属于一种变换，根据过滤条件，过滤出符合条件的值。变换出来的新的信号是原信号的一个子集。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-09-23T16:00:00.000Z">
+<meta property="article:modified_time" content="2018-09-24T07:02:42.000Z">
+<meta property="article:author" content="bob">
+<meta property="article:tag" content="iOS">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Bob的技术博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Bob的技术博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://TianXianBob.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-[iOS]RAC中的信号筛选操作" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/09/24/%5BiOS%5DRAC%E4%B8%AD%E7%9A%84%E4%BF%A1%E5%8F%B7%E7%AD%9B%E9%80%89%E6%93%8D%E4%BD%9C/" class="article-date">
+  <time datetime="2018-09-23T16:00:00.000Z" itemprop="datePublished">2018-09-24</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      RAC中的信号筛选操作
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>过滤操作也属于一种变换，根据过滤条件，过滤出符合条件的值。变换出来的新的信号是原信号的一个子集。</p>
+<h3 id="『过滤filter』"><a href="#『过滤filter』" class="headerlink" title="『过滤filter』"></a>『过滤filter』</h3><p> 过滤操作的实现:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">instancetype</span>)filter:(<span class="built_in">BOOL</span> (^)(<span class="keyword">id</span> value))block &#123;</span><br><span class="line">	<span class="built_in">NSCParameterAssert</span>(block != <span class="literal">nil</span>);</span><br><span class="line"></span><br><span class="line">	Class <span class="keyword">class</span> = <span class="keyword">self</span>.class;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> [[<span class="keyword">self</span> flattenMap:^ <span class="keyword">id</span> (<span class="keyword">id</span> value) &#123;</span><br><span class="line">		<span class="keyword">if</span> (block(value)) &#123;</span><br><span class="line">			<span class="keyword">return</span> [<span class="keyword">class</span> <span class="keyword">return</span>:value];</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">class</span>.empty;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;] setNameWithFormat:<span class="string">@&quot;[%@] -filter:&quot;</span>, <span class="keyword">self</span>.name];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>入参:一个参数为id类型，返回值的BOOL类型的block，且block不能为空。</p>
+<p> 实现:block中传入的是一个筛选条件，如果满足该条件则立即返回原信号的值，否则原信号的值就会返回一个空信号。</p>
+</blockquote>
+<p>例子:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSArray</span> *array = @[@(<span class="number">1</span>),@(<span class="number">2</span>),@(<span class="number">3</span>),@(<span class="number">4</span>),@(<span class="number">5</span>),@(<span class="number">6</span>),@(<span class="number">7</span>)];</span><br><span class="line">RACSignal *signal = array.rac_sequence.signal;</span><br><span class="line">[[signal filter:^<span class="built_in">BOOL</span>(<span class="keyword">id</span> value) &#123;</span><br><span class="line">    <span class="keyword">return</span> [value integerValue] &gt; <span class="number">6</span>;</span><br><span class="line">&#125;] subscribeNext:^(<span class="keyword">id</span> x) &#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@&quot;%ld&quot;</span>,[x integerValue]);</span><br><span class="line">&#125;];</span><br></pre></td></tr></table></figure>
+<p>输出为7。</p>
+<hr>
+<h3 id="『忽略ignore』"><a href="#『忽略ignore』" class="headerlink" title="『忽略ignore』"></a>『忽略ignore』</h3><p>忽略操作的实现:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">instancetype</span>)ignore:(<span class="keyword">id</span>)value &#123;</span><br><span class="line">    <span class="keyword">return</span> [[<span class="keyword">self</span> filter:^ <span class="built_in">BOOL</span> (<span class="keyword">id</span> innerValue) &#123;</span><br><span class="line">        <span class="keyword">return</span> innerValue != value &amp;&amp; ![innerValue isEqual:value];</span><br><span class="line">    &#125;] setNameWithFormat:<span class="string">@&quot;[%@] -ignore: %@&quot;</span>, <span class="keyword">self</span>.name, [value rac_description]];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>入参:一个id类型的对象。</p>
+</blockquote>
+<blockquote>
+<p>实现:本质还是一个filter操作，当传入的原信号的值与需要忽略的值相同的时候，返回一个空信号。</p>
+</blockquote>
+<p>例子:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSArray</span> *ignore_array = @[@(<span class="number">1</span>),@(<span class="number">2</span>),@(<span class="number">3</span>),@(<span class="number">4</span>),@(<span class="number">5</span>)];</span><br><span class="line">RACSignal *ignore_signal = ignore_array.rac_sequence.signal;</span><br><span class="line">[[ignore_signal ignore:@(<span class="number">2</span>)] subscribeNext:^(<span class="keyword">id</span> x) &#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@&quot;value = %ld&quot;</span>,[x integerValue]);</span><br><span class="line">&#125;];</span><br></pre></td></tr></table></figure>
+<p>输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">value = 1</span><br><span class="line">value = 3</span><br><span class="line">value = 4</span><br><span class="line">value = 5</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="『两两截然不同distinctUntilChanged』"><a href="#『两两截然不同distinctUntilChanged』" class="headerlink" title="『两两截然不同distinctUntilChanged』"></a>『两两截然不同distinctUntilChanged』</h3><p>两两不同实现:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">instancetype</span>)distinctUntilChanged &#123;</span><br><span class="line">	Class <span class="keyword">class</span> = <span class="keyword">self</span>.class;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> [[<span class="keyword">self</span> bind:^&#123;</span><br><span class="line">		__block <span class="keyword">id</span> lastValue = <span class="literal">nil</span>;</span><br><span class="line">		__block <span class="built_in">BOOL</span> initial = <span class="literal">YES</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> ^(<span class="keyword">id</span> x, <span class="built_in">BOOL</span> *stop) &#123;</span><br><span class="line">			<span class="keyword">if</span> (!initial &amp;&amp; (lastValue == x || [x isEqual:lastValue])) <span class="keyword">return</span> [<span class="keyword">class</span> empty];</span><br><span class="line"></span><br><span class="line">			initial = <span class="literal">NO</span>;</span><br><span class="line">			lastValue = x;</span><br><span class="line">			<span class="keyword">return</span> [<span class="keyword">class</span> <span class="keyword">return</span>:x];</span><br><span class="line">		&#125;;</span><br><span class="line">	&#125;] setNameWithFormat:<span class="string">@&quot;[%@] -distinctUntilChanged&quot;</span>, <span class="keyword">self</span>.name];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p> 实现:每次变换都记录下原型号的上一个发送过来的值，并与这一次的值进行比较，如果相同，则吃掉该值，返回empty信号。只有和上一次的值不同，才会发送新值。实际就是两两信号间的值是否相同。</p>
+</blockquote>
+<p>例子:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSArray</span> *array = @[@(<span class="number">1</span>),@(<span class="number">1</span>),@(<span class="number">2</span>),@(<span class="number">3</span>),@(<span class="number">1</span>),@(<span class="number">5</span>)];</span><br><span class="line">    RACSignal *signal = array.rac_sequence.signal;</span><br><span class="line">    [[signal distinctUntilChanged] subscribeNext:^(<span class="keyword">id</span> x) &#123;</span><br><span class="line">        <span class="built_in">NSLog</span>(<span class="string">@&quot;value = %ld&quot;</span>,[x integerValue]);</span><br><span class="line">    &#125;];</span><br></pre></td></tr></table></figure>
+<p>输出:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">value = 1</span><br><span class="line">value = 2</span><br><span class="line">value = 3</span><br><span class="line">value = 1</span><br><span class="line">value = 5</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="『信号的取值个数take』"><a href="#『信号的取值个数take』" class="headerlink" title="『信号的取值个数take』"></a>『信号的取值个数take』</h3><p>信号取值个数的实现:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"> - (<span class="keyword">instancetype</span>)take:(<span class="built_in">NSUInteger</span>)count &#123;</span><br><span class="line">	Class <span class="keyword">class</span> = <span class="keyword">self</span>.class;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> [[<span class="keyword">self</span> bind:^&#123;</span><br><span class="line">		__block <span class="built_in">NSUInteger</span> taken = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> ^ <span class="keyword">id</span> (<span class="keyword">id</span> value, <span class="built_in">BOOL</span> *stop) &#123;</span><br><span class="line">			RACStream *result = <span class="keyword">class</span>.empty;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">if</span> (taken &lt; count) result = [<span class="keyword">class</span> <span class="keyword">return</span>:value];</span><br><span class="line">			<span class="keyword">if</span> (++taken &gt;= count) *stop = <span class="literal">YES</span>;</span><br><span class="line"></span><br><span class="line">			<span class="keyword">return</span> result;</span><br><span class="line">		&#125;;</span><br><span class="line">	&#125;] setNameWithFormat:<span class="string">@&quot;[%@] -take: %lu&quot;</span>, <span class="keyword">self</span>.name, (<span class="keyword">unsigned</span> <span class="keyword">long</span>)count];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>入参:一个NSUInteger类型的值，表示取值的个数。</p>
+<p>实现:通过bind函数，在闭包中从第0个数值开始取值，直到取到第count个的时候，就停止取值。</p>
+</blockquote>
+<p>例子:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"> <span class="built_in">NSArray</span> *array = @[@(<span class="number">1</span>),@(<span class="number">2</span>),@(<span class="number">3</span>),@(<span class="number">4</span>),@(<span class="number">5</span>),@(<span class="number">6</span>),@(<span class="number">7</span>)];</span><br><span class="line"> RACSignal *signal = array.rac_sequence.signal;</span><br><span class="line">[[signal take:<span class="number">4</span>] subscribeNext:^(<span class="keyword">id</span> x) &#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@&quot;value = %ld&quot;</span>,[x integerValue]);</span><br><span class="line">&#125;];</span><br></pre></td></tr></table></figure>
+<p>输出:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">value = 1</span><br><span class="line">value = 2</span><br><span class="line">value = 3</span><br><span class="line">value = 4</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="『跳过skip』"><a href="#『跳过skip』" class="headerlink" title="『跳过skip』"></a>『跳过skip』</h3><p>跳过的具体实现:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">instancetype</span>)skip:(<span class="built_in">NSUInteger</span>)skipCount &#123;</span><br><span class="line">	Class <span class="keyword">class</span> = <span class="keyword">self</span>.class;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> [[<span class="keyword">self</span> bind:^&#123;</span><br><span class="line">		__block <span class="built_in">NSUInteger</span> skipped = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> ^(<span class="keyword">id</span> value, <span class="built_in">BOOL</span> *stop) &#123;</span><br><span class="line">			<span class="keyword">if</span> (skipped &gt;= skipCount) <span class="keyword">return</span> [<span class="keyword">class</span> <span class="keyword">return</span>:value];</span><br><span class="line"></span><br><span class="line">			skipped++;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">class</span>.empty;</span><br><span class="line">		&#125;;</span><br><span class="line">	&#125;] setNameWithFormat:<span class="string">@&quot;[%@] -skip: %lu&quot;</span>, <span class="keyword">self</span>.name, (<span class="keyword">unsigned</span> <span class="keyword">long</span>)skipCount];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>skip的实现也是非常的简单，判断当前跳过的个数是否大于传入的skipCount，是的话返回信号的值，否则返回空信号。</p>
+</blockquote>
+<p>例子:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSArray</span> *array = @[@(<span class="number">1</span>),@(<span class="number">2</span>),@(<span class="number">3</span>),@(<span class="number">4</span>),@(<span class="number">5</span>),@(<span class="number">6</span>),@(<span class="number">7</span>)];</span><br><span class="line">RACSignal *signal = array.rac_sequence.signal;</span><br><span class="line">[[signal skip:<span class="number">4</span>] subscribeNext:^(<span class="keyword">id</span> x) &#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@&quot;value = %ld&quot;</span>,[x integerValue]);</span><br><span class="line">&#125;];</span><br></pre></td></tr></table></figure>
+<p>输出:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">value = 5</span><br><span class="line">value = 6</span><br><span class="line">value = 7</span><br><span class="line">value = 8</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="『信号的分组groupBy-transform-』"><a href="#『信号的分组groupBy-transform-』" class="headerlink" title="『信号的分组groupBy:transform:』"></a>『信号的分组groupBy:transform:』</h3><p>信号分组的实现:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">- (RACSignal *)groupBy:(<span class="keyword">id</span>&lt;<span class="built_in">NSCopying</span>&gt; (^)(<span class="keyword">id</span> object))keyBlock transform:(<span class="keyword">id</span> (^)(<span class="keyword">id</span> object))transformBlock &#123;</span><br><span class="line">    <span class="built_in">NSCParameterAssert</span>(keyBlock != <span class="literal">NULL</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> [[RACSignal createSignal:^(<span class="keyword">id</span>&lt;RACSubscriber&gt; subscriber) &#123;</span><br><span class="line">        <span class="built_in">NSMutableDictionary</span> *groups = [<span class="built_in">NSMutableDictionary</span> dictionary];</span><br><span class="line">        <span class="built_in">NSMutableArray</span> *orderedGroups = [<span class="built_in">NSMutableArray</span> array];</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> [<span class="keyword">self</span> subscribeNext:^(<span class="keyword">id</span> x) &#123;</span><br><span class="line">            <span class="keyword">id</span>&lt;<span class="built_in">NSCopying</span>&gt; key = keyBlock(x);</span><br><span class="line">            RACGroupedSignal *groupSubject = <span class="literal">nil</span>;</span><br><span class="line">            <span class="keyword">@synchronized</span>(groups) &#123;</span><br><span class="line">                groupSubject = groups[key];</span><br><span class="line">                <span class="keyword">if</span> (groupSubject == <span class="literal">nil</span>) &#123;</span><br><span class="line">                    groupSubject = [RACGroupedSignal signalWithKey:key];</span><br><span class="line">                    groups[key] = groupSubject;</span><br><span class="line">                    [orderedGroups addObject:groupSubject];</span><br><span class="line">                    [subscriber sendNext:groupSubject];</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            [groupSubject sendNext:transformBlock != <span class="literal">NULL</span> ? transformBlock(x) : x];</span><br><span class="line">        &#125; error:^(<span class="built_in">NSError</span> *error) &#123;</span><br><span class="line">            [subscriber sendError:error];</span><br><span class="line">            </span><br><span class="line">            [orderedGroups makeObjectsPerformSelector:<span class="keyword">@selector</span>(sendError:) withObject:error];</span><br><span class="line">        &#125; completed:^&#123;</span><br><span class="line">            [subscriber sendCompleted];</span><br><span class="line">            </span><br><span class="line">            [orderedGroups makeObjectsPerformSelector:<span class="keyword">@selector</span>(sendCompleted)];</span><br><span class="line">        &#125;];</span><br><span class="line">    &#125;] setNameWithFormat:<span class="string">@&quot;[%@] -groupBy:transform:&quot;</span>, <span class="keyword">self</span>.name];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>入参:两个闭包，一个叫keyBlock，一个叫transformBlock。具体的作用见实现。</p>
+</blockquote>
+<blockquote>
+<p>实现:整个方法实际是新建了一个信号，并对原信号进行一层包装。keyBlock中传入的当做信号值的key。transform闭包则对传入的值进行了变换。并创建了一个groups字典和orderedGroups的数组。取出groups字典中的的值，如果没有，就创建一个RACGRoupedSignal信号加入到字典和数组中与之对应。然后让当前新建的信号去订阅该信号。订阅之后，orderedGroups就要发送值，如果tansform闭包不为空，就发送变换后的值，反之则发送原来的值。最后，如果发生失败或者分组结束，都要向数组中的每一个信号都发送失败或者成功的信号。</p>
+</blockquote>
+<p>例子:</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSArray</span> *array = @[@(<span class="number">1</span>),@(<span class="number">2</span>),@(<span class="number">3</span>),@(<span class="number">4</span>),@(<span class="number">5</span>),@(<span class="number">6</span>),@(<span class="number">7</span>)];</span><br><span class="line">    RACSignal *signal = array.rac_sequence.signal;</span><br><span class="line">    RACSignal *groupBySignal = [signal groupBy:^<span class="keyword">id</span>&lt;<span class="built_in">NSCopying</span>&gt;(<span class="built_in">NSNumber</span> *object) &#123;</span><br><span class="line">        <span class="keyword">return</span> object.integerValue &gt; <span class="number">5</span> ? <span class="string">@&quot;大于5&quot;</span>:<span class="string">@&quot;小于等于5&quot;</span>;</span><br><span class="line">    &#125; transform:^<span class="keyword">id</span>(<span class="keyword">id</span> object) &#123;</span><br><span class="line">        <span class="keyword">return</span> @([object integerValue] * <span class="number">10</span>);</span><br><span class="line">    &#125;];</span><br><span class="line">    </span><br><span class="line">    [[[groupBySignal filter:^<span class="built_in">BOOL</span>(RACGroupedSignal *value) &#123;</span><br><span class="line">        <span class="keyword">return</span> [(<span class="built_in">NSString</span> *)value.key isEqualToString:<span class="string">@&quot;大于5&quot;</span>];</span><br><span class="line">    &#125;] flatten] subscribeNext:^(<span class="keyword">id</span> x) &#123;</span><br><span class="line">        <span class="built_in">NSLog</span>(<span class="string">@&quot;value = %@&quot;</span>,x);</span><br><span class="line">    &#125;];</span><br></pre></td></tr></table></figure>
+
+<p>输出:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">value = 60</span><br><span class="line">value = 70</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>当然这里只是部分信号筛选的一些操作，其他的操作我们下回分解。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://tianxianbob.github.io/2018/09/24/[iOS]RAC%E4%B8%AD%E7%9A%84%E4%BF%A1%E5%8F%B7%E7%AD%9B%E9%80%89%E6%93%8D%E4%BD%9C/" data-id="ckrx1o4v6000bbqzb5ubh22nv" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/iOS/" rel="tag">iOS</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2018/11/27/HTTP%E5%92%8CHTTPS%E7%9A%84%E5%8C%BA%E5%88%AB/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          HTTP和HTTPS的区别
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2018/09/04/%5BiOS%5D(%7B%E2%80%A6%7D)%E8%AF%AD%E6%B3%95%E7%9A%84%E4%BD%BF%E7%94%A8/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">GCC Code Block Evaluation C Extension {...}的使用</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E5%90%90%E6%A7%BD/">吐槽</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E9%9A%8F%E7%AC%94/">随笔</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Git/" rel="tag">Git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/iOS/" rel="tag">iOS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%94%9F%E6%B4%BB/" rel="tag">生活</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E7%BD%91%E7%BB%9C/" rel="tag">网络</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E9%9A%8F%E7%AC%94/" rel="tag">随笔</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Git/" style="font-size: 10px;">Git</a> <a href="/tags/iOS/" style="font-size: 20px;">iOS</a> <a href="/tags/%E7%94%9F%E6%B4%BB/" style="font-size: 10px;">生活</a> <a href="/tags/%E7%BD%91%E7%BB%9C/" style="font-size: 10px;">网络</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 15px;">随笔</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/08/">八月 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">一月 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">十二月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">十二月 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/08/04/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2019/01/27/SVN%E5%88%B0git%E7%9A%84%E8%BF%81%E7%A7%BB/">SVN到Git的迁移</a>
+          </li>
+        
+          <li>
+            <a href="/2019/01/15/%E6%B1%95%E5%A4%B4-%E5%B9%BF%E5%B7%9E%E6%B8%B8%E7%8E%A9Plan/">汕头-广州游玩Plan</a>
+          </li>
+        
+          <li>
+            <a href="/2018/12/06/%E6%B5%85%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D%E7%9A%84%E5%8C%BA%E5%88%AB/">深拷贝和浅拷贝的区别</a>
+          </li>
+        
+          <li>
+            <a href="/2018/12/05/%5BTOC%5D/">星辰的一生</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2021 bob<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+</body>
+</html>
